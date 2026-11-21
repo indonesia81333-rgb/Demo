@@ -1,0 +1,9 @@
+.env
+service-account.json
+*.session
+*.session-journal
+downloads/
+data/
+__pycache__/
+.venv/
+.git/
