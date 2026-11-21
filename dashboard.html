@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FilePress Bot Status</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --card: #ffffff; --text: #1b1f24; --muted: #667085;
+    --line: #e4e7ec; --ok: #12b76a; --warn: #f79009; --bad: #f04438;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1216; --card: #171b21; --text: #e8eaed; --muted: #98a2b3; --line: #262c35; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; align-items: center; justify-content: space-between;
+           gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  h1 { font-size: 20px; margin: 0; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+          border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--warn); }
+  .dot.online { background: var(--ok); }
+  .dot.offline { background: var(--bad); }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .value { font-size: 22px; font-weight: 600; margin-top: 4px; word-break: break-word; }
+  .value.small { font-size: 16px; }
+  h2 { font-size: 14px; color: var(--muted); margin: 24px 0 10px; text-transform: uppercase; letter-spacing: .04em; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>FilePress Telegram Bot</h1>
+    <span class="pill"><span id="dot" class="dot $status_class"></span><span data-k="status">$status</span></span>
+  </header>
+
+  <h2>Runtime</h2>
+  <div class="grid">
+    <div class="card"><div class="label">Running time</div><div class="value" data-k="uptime">$uptime</div></div>
+    <div class="card"><div class="label">Started</div><div class="value small" data-k="started">$started</div></div>
+    <div class="card"><div class="label">Bot</div><div class="value small" data-k="username">$username</div></div>
+    <div class="card"><div class="label">Upload route</div><div class="value small" data-k="route">$route</div></div>
+    <div class="card"><div class="label">Telegram file limit</div><div class="value small" data-k="limit">$limit</div></div>
+    <div class="card"><div class="label">Active uploads</div><div class="value" data-k="active">$active</div></div>
+  </div>
+
+  <h2>Uploads</h2>
+  <div class="grid">
+    <div class="card"><div class="label">All time</div><div class="value" data-k="total">$total</div></div>
+    <div class="card"><div class="label">Last 24 hours</div><div class="value" data-k="last_24h">$last_24h</div></div>
+    <div class="card"><div class="label">Data uploaded</div><div class="value" data-k="bytes">$bytes</div></div>
+    <div class="card"><div class="label">Users</div><div class="value" data-k="users">$users</div></div>
+    <div class="card"><div class="label">This session OK</div><div class="value" data-k="ok">$ok</div></div>
+    <div class="card"><div class="label">This session failed</div><div class="value" data-k="failed">$failed</div></div>
+    <div class="card"><div class="label">Last upload</div><div class="value small" data-k="last_upload">$last_upload</div></div>
+  </div>
+
+  <footer>Auto-refreshes every 5 seconds. <span id="err"></span></footer>
+</main>
+<script>
+  function refresh() {
+    fetch('/api/status' + location.search, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
+      .then(function (data) {
+        var shown = data.display || {};
+        Object.keys(shown).forEach(function (key) {
+          var el = document.querySelector('[data-k="' + key + '"]');
+          if (el) { el.textContent = shown[key]; }
+        });
+        document.getElementById('dot').className = 'dot ' + (data.online ? 'online' : '');
+        document.getElementById('err').textContent = '';
+      })
+      .catch(function (e) {
+        document.getElementById('dot').className = 'dot offline';
+        document.getElementById('err').textContent = 'Connection lost (' + e.message + ')';
+      });
+  }
+  setInterval(refresh, 5000);
+</script>
+</body>
+</html>
